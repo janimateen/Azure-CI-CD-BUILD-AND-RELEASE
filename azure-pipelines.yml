@@ -1,0 +1,29 @@
+trigger:
+  - develop
+
+pool:
+  vmImage: 'windows-latest'
+  
+steps:
+  - task: NuGetInstaller@0
+
+  - task: NuGetCommand@2
+    inputs:
+      restoreSolution: "**/*.sln"
+
+  - task: MSBuild@1
+    inputs:
+      solution: "**/*.sln"
+      msbuildArguments: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactstagingdirectory)\\"'
+   
+  - task: CopyFiles@1
+    inputs:
+      SourceFolder: ARM_Template
+      Contents: "**/*.json"
+      TargetFolder: $(build.artifactstagingdirectory)
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: $(build.artifactstagingdirectory)
+      ArtifactName: 'drop'
+      publishLocation: 'container'
